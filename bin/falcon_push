@@ -1,0 +1,41 @@
+#!/opt/mydan/perl/bin/perl
+use strict;
+use warnings;
+
+use AnyEvent;
+use Sys::Hostname;
+use MYDan::Util::OptConf;
+
+=head1 SYNOPSIS
+
+ $0 [--prefix $name ] [--tags tags1=x1,tags2=x2 ] [--debug]
+ 
+=cut
+
+my $option = MYDan::Util::OptConf->load();
+my %o = $option->set( tags => "from=log2falcon"  )->get( qw( prefix=s  tags=s debug ) )->dump();
+$option->assert( 'prefix' );
+
+$0 = "log2falcon_falcon_push_$ENV{UUID}" if $ENV{UUID};
+
+my $done = AnyEvent->condvar;
+
+my $w; $w = AnyEvent->io (fh => \*STDIN, poll => 'r', cb => sub {
+   my $input = <STDIN>;
+   unless( defined $input ){ $done->send; return; }
+
+   chomp $input;
+   warn "read: $input\n" if $o{debug};
+
+   return unless $input =~ /^([a-zA-Z0-9\._\-]+):(\d+)$/;
+
+   my ( $timestamp, $endpoint ) = ( time, hostname() );
+
+   my ( $key, $val ) = ( "$o{prefix}.$1", $2 );
+   my $cmd = "curl -X POST -d \"[{\\\"metric\\\": \\\"$key\\\", \\\"endpoint\\\": \\\"$endpoint\\\", \\\"timestamp\\\": $timestamp,\\\"step\\\": 60,\\\"value\\\": $val,\\\"counterType\\\": \\\"GAUGE\\\",\\\"tags\\\": \\\"$o{tags}\\\"}]\" http://127.0.0.1:1988/v1/push";
+
+   warn "$cmd\n";
+   system $cmd;
+});
+
+$done->recv;

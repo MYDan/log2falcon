@@ -1,0 +1,34 @@
+#!/opt/mydan/perl/bin/perl
+use strict;
+use warnings;
+
+use MYDan;
+use MYDan::Util::OptConf;
+
+=head1 SYNOPSIS
+
+ $0 [--install]
+ $0 [--uninstall]
+ 
+=cut
+
+use Data::Dumper;
+
+my $option = MYDan::Util::OptConf->load();
+my %o = $option->get( qw( install uninstall ) )->dump();
+
+my $path = "/etc/cron.d/mydan.log2falcon.cron";
+
+if( $o{install} )
+{
+    exec "echo '* * * * * root $MYDan::PATH/log2falcon/tools/run >/dev/null 2>&1' > '$path'";
+}
+elsif( $o{uninstall} )
+{
+    exec "rm -f '$path'";
+}
+else
+{
+    $option->assert();
+}
+

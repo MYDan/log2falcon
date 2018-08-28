@@ -1,0 +1,67 @@
+#!/opt/mydan/perl/bin/perl
+use strict;
+use warnings;
+
+use Tie::File;
+use Digest::MD5;
+use Sys::Hostname;
+use File::Basename;
+
+use Data::Dumper;
+
+use MYDan;
+use MYDan::Util::OptConf;
+
+=head1 SYNOPSIS
+
+ $0 [--prefix $name ] [--tags tags1=x1,tags2=x2 ] [--debug]
+ 
+=cut
+
+
+my ( $bin, $conf, $logs ) = map{ "$MYDan::PATH/log2falcon/$_" }qw( bin conf logs );
+map{ die "nodir:$_\n" unless -d $_ }( $conf, $logs );
+
+system "ps -ef|grep log2falcon_tail_|awk '{if(\$3==1){print \$2}}'|xargs -i{} kill {}";
+chomp ( my @list = `ps -ef|grep falcon_push_` );
+print Dumper \@list;
+
+my %x;
+map{ $x{$1} ++ if $_ =~ /falcon_push_([a-zA-Z0-9]{32})/ }@list;
+print Dumper \%x;
+
+map{ killuuid( $_ ) }grep{ $x{$_} > 1 }keys %x;
+
+for my $path ( glob "$conf/*" )
+{
+    my $name = File::Basename::basename $path;
+    print $name,"\n";
+    die "tie $path fail: $!!" unless tie my @cont, 'Tie::File', $path;
+    my $md5 = Digest::MD5->new->add( join ',', $path, @cont )->hexdigest;
+    use Data::Dumper;
+    next if delete $x{$md5};
+    
+    my $args = '';
+    my $tags = '';
+    for( 1 .. $#cont )
+    {
+        $cont[$_] =~ /^\s*([a-zA-Z0-9]+)\s*:\s*([a-zA-Z0-9\._\-=,]+)\s*$/;
+        $1 eq 'tags' ? $tags = "--tags '$2'":  $args .= " '$1' '$2'";
+    }
+
+    my $cmd = "UUID=$md5 nohup sh -c \"$bin/tail -F '$cont[0]'|$bin/statistical  -i 60 $args|$bin/falcon_push --prefix $name $tags\" >> $logs/$name.log 2>&1&";
+    print Dumper \@cont, $md5, $cmd;
+    system $cmd;
+    untie @cont;
+}
+
+map{ killuuid($_) }keys %x;
+
+sub killuuid
+{
+    my $uuid = shift;
+    print "kill:$uuid\n";
+    system "ps -ef|grep falcon_push_$uuid|grep -v grep|awk '{print \$2}'|xargs -i{} kill {}";
+    system "ps -ef|grep UUID=$uuid|grep -v grep|awk '{print \$2}'|xargs -i{} kill {}";
+}
+

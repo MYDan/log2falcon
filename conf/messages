@@ -1,0 +1,5 @@
+/var/log/messages
+fail: fail
+fail: failed
+error: error
+tags: xxx=0,kkk=111

@@ -1,0 +1,39 @@
+#!/opt/mydan/perl/bin/perl
+use strict;
+use warnings;
+
+use AnyEvent;
+use MYDan::Util::OptConf;
+
+$|++;
+
+=head1 SYNOPSIS
+
+ $0 -F /path/file1
+ 
+=cut
+
+$0 = "log2falcon_tail_$ENV{UUID}" if $ENV{UUID};
+
+my $option = MYDan::Util::OptConf->load();
+my %o = $option->get( qw( File=s ) )->dump();
+$option->assert( 'File' );
+
+my $done = AnyEvent->condvar;
+
+my ( $child, $TERM, $PIPE );
+if ( my $pid = fork() )
+{
+    $child = AnyEvent->child ( pid => $pid, cb => sub{ print "child exit."; $done->send;} );
+    $PIPE = AnyEvent->signal (signal => "PIPE", cb => sub { warn "pipe broken. kill 9, $pid\n"; kill 9, $pid; $done->send;  });
+    $TERM = AnyEvent->signal (signal => "TERM", cb => sub { warn "TERM SIG. kill 9, $pid\n"; kill 9, $pid; $done->send;  });
+}
+else { exec "tail -F '$o{File}'"; }
+
+my $timer = AnyEvent->timer (
+   after    => 60,
+   interval => 60,
+   cb       => sub{ print "heartbeat\n"; },
+);
+
+$done->recv;

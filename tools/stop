@@ -1,0 +1,9 @@
+#!/opt/mydan/perl/bin/perl
+use strict;
+use warnings;
+
+use Data::Dumper;
+
+system "ps -ef|grep log2falcon_tail_|grep -v grep|awk '{print \$2}'|xargs -i{} kill {}";
+chomp ( my @list = `ps -ef|grep falcon_push_` );
+print Dumper \@list;

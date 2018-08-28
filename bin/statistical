@@ -1,0 +1,60 @@
+#!/opt/mydan/perl/bin/perl
+use strict;
+use warnings;
+
+use AnyEvent;
+use MYDan::Util::OptConf;
+
+$|++;
+
+=head1 SYNOPSIS
+
+ $0 [--after 60] [--interval 60] [--debug]
+ $0 key1 expression1 key2 expression2 ...
+ 
+=cut
+
+$0 = "log2falcon_statistical_$ENV{UUID}" if $ENV{UUID};
+
+my $option = MYDan::Util::OptConf->load();
+my %o = $option->set( interval => 60 )->get( qw( after=i interval=i debug ) )->dump();
+$o{after} = $o{interval} unless defined $o{after};
+$option->assert() if ( scalar @ARGV ) % 2; 
+
+my ( %argv, %init, @regx, %result, $count );
+
+%argv = @ARGV;
+%init = map{ $_ => 0 }keys %argv;
+$count = 1 if defined $init{count};
+$init{count} = 0;
+
+while(@ARGV)
+{
+    push @regx, [ splice @ARGV, 0, 2 ]; 
+}
+
+%result = %init;
+
+my $done = AnyEvent->condvar;
+
+my $sig = AnyEvent->signal (signal => "PIPE", cb => sub { warn "pipe broken.\n";$done->send;  });
+
+my $w; $w = AnyEvent->io (fh => \*STDIN, poll => 'r', cb => sub {
+    my $input = <STDIN>;
+    unless( defined $input )
+    {
+   	$done->send;return;
+    }
+    chomp $input;
+    warn "read: $input\n" if $o{debug};
+    $result{count} ++ unless defined $count;
+    map { $result{$_->[0]} ++ if $input =~ /$_->[1]/; }@regx; 
+});
+
+my $w2 = AnyEvent->timer (
+    after    => $o{after},
+    interval => $o{interval},
+    cb       => sub{ map{ print "$_:$result{$_}\n";}keys %result; %result = %init; },
+);
+
+$done->recv;
