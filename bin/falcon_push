@@ -34,8 +34,7 @@ my $w; $w = AnyEvent->io (fh => \*STDIN, poll => 'r', cb => sub {
    my ( $key, $val ) = ( "$o{prefix}.$1", $2 );
    my $cmd = "curl -X POST -d \"[{\\\"metric\\\": \\\"$key\\\", \\\"endpoint\\\": \\\"$endpoint\\\", \\\"timestamp\\\": $timestamp,\\\"step\\\": 60,\\\"value\\\": $val,\\\"counterType\\\": \\\"GAUGE\\\",\\\"tags\\\": \\\"$o{tags}\\\"}]\" http://127.0.0.1:1988/v1/push";
 
-   warn "$cmd\n" if $o{debug};
-   system $cmd;
+   $o{debug} ? warn( "$cmd\n" ) : system $cmd;
 });
 
 $done->recv;
