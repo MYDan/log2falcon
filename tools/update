@@ -7,12 +7,12 @@ use MYDan::Util::OptConf;
 
 =head1 SYNOPSIS
 
- $0 [--version 0.0.2]
+ $0 [--version 0.0.x]
  
 =cut
 
 my $option = MYDan::Util::OptConf->load();
-my %o = $option->set( version => '0.0.2' )->get( qw( version=s ) )->dump();
+my %o = $option->set( version => '0.0.3' )->get( qw( version=s ) )->dump();
 $option->assert() unless $o{version} =~ /^\d[\.\d]*$/;
 
 my ( $temp, $dist, $file ) = ( "/opt/mydan/log2falcon-$o{version}", "/opt/mydan/log2falcon", "/tmp/log2falcon.$o{version}.XXX.tar.gz" );
