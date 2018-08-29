@@ -44,7 +44,7 @@ for my $path ( glob "$conf/*" )
     my ( $args, $tags ) = ( '', '' );
     for( 1 .. $#cont )
     {
-        next unless $cont[$_] =~ /^\s*([a-zA-Z0-9_]+)\s*:\s*([a-zA-Z0-9\._\-=,]+)\s*$/;
+        next unless $cont[$_] =~ /^\s*([a-zA-Z0-9_]+)\s*:\s*([a-zA-Z0-9\._\-=, ]+)\s*$/;
         $1 eq 'tags' ? $tags = "--tags '$2'":  $args .= " '$1' '$2'";
     }
 
