@@ -41,11 +41,10 @@ for my $path ( glob "$conf/*" )
     use Data::Dumper;
     next if delete $x{$md5};
     
-    my $args = '';
-    my $tags = '';
+    my ( $args, $tags ) = ( '', '' );
     for( 1 .. $#cont )
     {
-        $cont[$_] =~ /^\s*([a-zA-Z0-9]+)\s*:\s*([a-zA-Z0-9\._\-=,]+)\s*$/;
+        next unless $cont[$_] =~ /^\s*([a-zA-Z0-9]+)\s*:\s*([a-zA-Z0-9\._\-=,]+)\s*$/;
         $1 eq 'tags' ? $tags = "--tags '$2'":  $args .= " '$1' '$2'";
     }
 
