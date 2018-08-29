@@ -29,7 +29,7 @@ $count = 1 if defined $init{count};
 $init{count} = 0;
 map{ 
     $collect{$_} = $1 if $_ =~ /_(\d+)$/;
-    $next{$_} = 1 if $_ =~ /^X/;
+    $next{$_} = 1 if $_ =~ /^[A-Z]/;
 }keys %init;
 
 while(@ARGV)
