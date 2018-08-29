@@ -48,7 +48,7 @@ for my $path ( glob "$conf/*" )
         $1 eq 'tags' ? $tags = "--tags '$2'":  $args .= " '$1' '$2'";
     }
 
-    my $cmd = "UUID=$md5 nohup sh -c \"$bin/tail -F '$cont[0]'|$bin/statistical  -i 60 $args|$bin/falcon_push --prefix $name $tags\" >> $logs/$name.log 2>&1&";
+    my $cmd = "UUID=$md5 nohup sh -c \"$bin/tail -F '$cont[0]'|$bin/statistical -i 60 $args|$bin/falcon_push --metric $name $tags\" >> $logs/$name.log 2>&1&";
     print Dumper \@cont, $md5, $cmd;
     system $cmd;
     untie @cont;
