@@ -38,7 +38,7 @@ for my $path ( glob "$conf/*" )
     print $name,"\n";
     die "tie $path fail: $!!" unless tie my @cont, 'Tie::File', $path;
     my $md5 = Digest::MD5->new->add( join ',', $path, @cont )->hexdigest;
-    use Data::Dumper;
+    die "$path format error" if ( @cont < 1) || ( $cont[0] =~ /'/ );
     next if delete $x{$md5};
     
     my ( $args, $tags ) = ( '', '' );
