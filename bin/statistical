@@ -21,13 +21,16 @@ my %o = $option->set( interval => 60 )->get( qw( after=i interval=i debug ) )->d
 $o{after} = $o{interval} unless defined $o{after};
 $option->assert() if ( scalar @ARGV ) % 2; 
 
-my ( %argv, %init, @regx, %result, $count, %collect, %temp );
+my ( %argv, %init, @regx, %result, $count, %collect, %temp, %next );
 
 %argv = @ARGV;
 %init = map{ $_ => 0 }keys %argv;
 $count = 1 if defined $init{count};
 $init{count} = 0;
-map{ $collect{$_} = $1 if $_ =~ /_(\d+)$/ }keys %init;
+map{ 
+    $collect{$_} = $1 if $_ =~ /_(\d+)$/;
+    $next{$_} = 1 if $_ =~ /^X/;
+}keys %init;
 
 while(@ARGV)
 {
@@ -42,14 +45,18 @@ my $sig = AnyEvent->signal (signal => "PIPE", cb => sub { warn "pipe broken.\n";
 
 my $w; $w = AnyEvent->io (fh => \*STDIN, poll => 'r', cb => sub {
     my $input = <STDIN>;
-    unless( defined $input )
-    {
-   	$done->send;return;
-    }
+    unless( defined $input ) { $done->send;return; }
     chomp $input;
     warn "read: $input\n" if $o{debug};
     $result{count} ++ unless defined $count;
-    map { $result{$_->[0]} ++ if $input =~ /$_->[1]/; }@regx; 
+    for my $r ( @regx )
+    {
+        if( $input =~ /$r->[1]/ )
+        {
+            $result{$r->[0]} ++;
+            last if $next{$r->[0]};
+        }
+    }
 });
 
 my $i=0;
