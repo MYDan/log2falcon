@@ -28,8 +28,6 @@ my ( %argv, %init, @regx, %result, $count, %collect, %temp );
 $count = 1 if defined $init{count};
 $init{count} = 0;
 map{ $collect{$_} = $1 if $_ =~ /_(\d+)$/ }keys %init;
-use Data::Dumper;
-print Dumper \%collect;
 
 while(@ARGV)
 {
