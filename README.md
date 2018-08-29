@@ -3,7 +3,7 @@
 把日志信息采集到falcon的工具
 
 > * 安装依赖:curl -L update.mydan.org|bash
-> * 安装log2falcon: cd /opt/mydan && git clone https://github.com/MYDan/log2falcon.git
+> * 安装log2falcon: cd /opt/mydan && git clone https://github.com/MYDan/log2falcon.git (或者通过 curl https://raw.githubusercontent.com/MYDan/log2falcon/master/tools/update|/opt/mydan/perl/bin/perl 安装)
 > * 安装 sudo /opt/mydan/log2falcon/tools/cron --install
 > * 添加配置文件到 /opt/mydan/log2falcon/conf/
 
