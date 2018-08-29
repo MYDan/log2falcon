@@ -1,0 +1,30 @@
+#!/opt/mydan/perl/bin/perl
+use strict;
+use warnings;
+
+use MYDan;
+use MYDan::Util::OptConf;
+
+=head1 SYNOPSIS
+
+ $0 [--version 0.0.2]
+ 
+=cut
+
+my $option = MYDan::Util::OptConf->load();
+my %o = $option->set( version => '0.0.2' )->get( qw( version=s ) )->dump();
+$option->assert() unless $o{version} =~ /^\d[\.\d]*$/;
+
+my ( $temp, $dist, $file ) = ( "/opt/mydan/log2falcon-$o{version}", "/opt/mydan/log2falcon", "/tmp/log2falcon.$o{version}.XXX.tar.gz" );
+
+die "wget fail:$!" if system "wget https://github.com/MYDan/log2falcon/archive/v$o{version}.tar.gz -O $file";
+die "untar fail:$!" if system "tar -zxvf $file -C /opt/mydan/";
+die "rsync fail: $!" if system "rsync -av $temp/ $dist/ --exclude conf/ --exclude logs/ --delete";
+
+for my $name ( qw( conf logs ) )
+{
+    next if -d "$dist/$name";
+    die "cp $name fail:$!" if system "cp -r  $temp/$name $dist/$name";
+}
+
+die "clean fail:$!" if system "rm -rf $temp $file";
