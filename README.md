@@ -13,3 +13,4 @@
 > * 匹配规则 name: matchstring 
 > * 特殊name, 如name为count，会覆盖默认的日志行数统计count
 > * 特殊name, 如name为tags，为falcon中的tags
+> * 特殊规则name,如name以“_\d+”结尾时,进行累加，foo_10:累加10次

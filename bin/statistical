@@ -21,12 +21,15 @@ my %o = $option->set( interval => 60 )->get( qw( after=i interval=i debug ) )->d
 $o{after} = $o{interval} unless defined $o{after};
 $option->assert() if ( scalar @ARGV ) % 2; 
 
-my ( %argv, %init, @regx, %result, $count );
+my ( %argv, %init, @regx, %result, $count, %collect, %temp );
 
 %argv = @ARGV;
 %init = map{ $_ => 0 }keys %argv;
 $count = 1 if defined $init{count};
 $init{count} = 0;
+map{ $collect{$_} = $1 if $_ =~ /_(\d+)$/ }keys %init;
+use Data::Dumper;
+print Dumper \%collect;
 
 while(@ARGV)
 {
@@ -51,10 +54,27 @@ my $w; $w = AnyEvent->io (fh => \*STDIN, poll => 'r', cb => sub {
     map { $result{$_->[0]} ++ if $input =~ /$_->[1]/; }@regx; 
 });
 
+my $i=0;
 my $w2 = AnyEvent->timer (
     after    => $o{after},
     interval => $o{interval},
-    cb       => sub{ map{ print "$_:$result{$_}\n";}keys %result; %result = %init; },
+    cb       => sub{ 
+        $i++;
+
+            if( %collect )
+            {
+                for my $name ( keys %collect )
+                {
+                    my $c = $i % $collect{$name};
+                    $temp{$name}{$c} = $result{$name};
+                    $result{$name} = 0;
+                    map{ $result{$name} += $_ }values %{$temp{$name}};
+                }
+            }
+
+            map{ print "$_:$result{$_}\n";}keys %result; 
+            %result = %init; 
+        },
 );
 
 $done->recv;
