@@ -16,3 +16,6 @@
 > * 特殊name, 如name为tags，为falcon中的tags
 > * 特殊规则name,如name以“_\d+”结尾时,进行累加，foo_10:累加10次
 > * 特殊规则name,如name以大写字母开头时,匹配后不后往后匹配
+
+##
+测试： 单核处理速度：12W/s
